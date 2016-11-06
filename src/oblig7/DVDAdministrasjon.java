@@ -6,18 +6,29 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
+/**
+ * Denne klassen koordinerer og haandterer grunnleggende administrative oppgaver
+ * som aa registrere ny person, kjop av DVD-er, laan og retur. I tillegg har
+ * klassen metoder for å gå oversikt over status på eid, laant og utlaant
+ * DVD-er.
+ *
+ */
 public class DVDAdministrasjon {
 	public final Map<String, Person> navneliste = new HashMap<>();
 
+	// Oppretter DVD-arkiv fra fil.
 	public void lesArkivFraFil(String filnavn) throws Exception {
 		Scanner fil = new Scanner(new File(filnavn));
 
 		/*
+		 * Leser filen som en tilstandsmaskin med følgende gyldige tilstander:
+		 * 
 		 * State 0: Leser navn, har ikke passert første bindestrek
 		 * State 1: Leser ett navn i forkant av DVD-liste
 		 * State 2: Leser DVD-titler
 		 * State 3: Har lest lånt DVD-tittel. Neste linje inneholder låner.
 		 */
+		
 		int state = 0;
 
 		Person eier = null;
@@ -28,6 +39,7 @@ public class DVDAdministrasjon {
 
 			switch (state) {
 			case 0:
+				// Skilletegn indikerer at opplisting av personer som skal registreres er ferdig. State endres til 1.
 				if ("-".equals(linje)) {
 					state = 1;
 				} else {
@@ -37,11 +49,18 @@ public class DVDAdministrasjon {
 				break;
 
 			case 1:
+				// Henter opp eier slik at vi for de neste linjene kan legge DVD-er på denne eieren.
 				eier = navneliste.get(linje);
+				
+				// Flytter umiddelbart til state 2
 				state = 2;
 				break;
 
 			case 2:
+				/* 
+				 * Skilletegn indikerer at opplisting av eide/utlaante DVD-er for en person er ferdig.
+				 * Flytter til state 1 slik at programmet er klart for ny person.
+				 */
 				if ("-".equals(linje)) {
 					state = 1;
 					break;
@@ -49,20 +68,27 @@ public class DVDAdministrasjon {
 				
 				String tittel = linje;
 				
+				// Stjerne indikerer at DVD-en er utlaant.
 				if (tittel.startsWith("*")) {
+					// Fjerner stjernen fra tittelen.
 					tittel = tittel.substring(1);
 					laantTittel = tittel;
+					
+					// Flytter til state 3 for å kunne registrere hvem som laaner DVD-en
 					state = 3;
 				}
 				
+				// Uansett om DVD-en er kun eiet, eller baade eiet og utlaant, skal DVD-en legges til personen.
 				eier.leggTilDVD(tittel);
 				
 				break;
 			
 			
 			case 3:
+				// Registrere laanet
 				laan(linje, eier.getNavn(), laantTittel);
 				
+				// Returnerer til state 2 for å kunne registrere nye titler på personen
 				state = 2;
 				laantTittel = null;
 				
@@ -77,6 +103,10 @@ public class DVDAdministrasjon {
 		return navneliste.get(navn) != null;
 	}
 	
+	public Person hentPerson(String navn) {
+		return navneliste.get(navn);
+	}
+	
 	public void lagNyPerson(String navn) {
 		navneliste.put(navn, new Person(navn));
 	}
@@ -84,11 +114,13 @@ public class DVDAdministrasjon {
 	public void kjop(String kjoper, String tittel) {
 		Person person = navneliste.get(kjoper);
 
+		// Validerer at kjoper faktisk finnes
 		if (person == null) {
 			System.out.println("Personen " + kjoper + " finnes ikke");
 			return;
 		}
 		
+		// Validerer at kjoperen ikke allerede eier DVD-en
 		if (person.eierDVD(tittel)) {
 			System.out.println(kjoper + " eier allerede " + tittel);
 			return;
@@ -124,6 +156,7 @@ public class DVDAdministrasjon {
 	public void returnerDVD(String navn, String tittel) {
 		Person person = navneliste.get(navn);
 		
+		// Validerer at laaner faktisk finnes
 		if (person == null) {
 			System.out.println("Person med navn " + navn + " finnes ikke");
 			return;
@@ -131,12 +164,22 @@ public class DVDAdministrasjon {
 		
 		DVD laantDVD = person.hentLaantDVD(tittel);
 		 
+		// Kontrollerer at laaner faktisk har laant DVD-en
 		if (laantDVD == null) {
 			System.out.println(navn + " har ikke laant " + tittel);
 			return;
 		}
 		
-		laantDVD.returnerEtterLaan();
+		Person eier = laantDVD.getEier();
+		
+		// Returnerer DVD fra laaner
+		person.returnerLaantDVD(laantDVD);
+		
+		// Lar eier motta DVD
+		eier.mottaUtlaantDVD(laantDVD);
+		
+		// Markerer på DVD-en at ingen laaner DVD-en lenger
+		laantDVD.setLaaner(null);
 	}
 	
 	public void visPerson(String navn) {

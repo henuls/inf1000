@@ -2,6 +2,10 @@ package oblig7;
 
 import java.util.Scanner;
 
+/**
+ * Denne klassen gjoer det mulig aa administrere DVD-operasjoner ved at bruker kan gi kommandoer i en konsollmeny.
+ *
+ */
 public class DVDArkiv {
 	private DVDAdministrasjon admin = new DVDAdministrasjon();
 	private Scanner scanner = new Scanner(System.in);

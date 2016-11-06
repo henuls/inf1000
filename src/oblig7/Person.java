@@ -4,6 +4,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Denne klassen representerer en person som har et navn og holder rede på
+ * hvilke DVD-er personen eier, laaner og har laant ut.
+ *
+ */
 public class Person {
 	private final String navn;
 	private final Map<String, DVD> eideDVDer = new HashMap<>();
@@ -39,9 +44,9 @@ public class Person {
 			DVD dvd = eideDVDer.get(tittel);
 
 			utlaanteDVDer.put(dvd.getTittel(), dvd);
-			
+
 			dvd.setLaaner(laaner);
-			
+
 			return dvd;
 		}
 
@@ -51,7 +56,7 @@ public class Person {
 	public void mottaUtlaantDVD(DVD dvd) {
 		utlaanteDVDer.remove(dvd.getTittel());
 	}
-	
+
 	public void returnerLaantDVD(DVD dvd) {
 		laanteDVDer.remove(dvd.getTittel());
 	}
@@ -63,23 +68,23 @@ public class Person {
 	public boolean erUtlaant(String tittel) {
 		return utlaanteDVDer.get(tittel) != null;
 	}
-	
+
 	public DVD hentLaantDVD(String tittel) {
 		return laanteDVDer.get(tittel);
 	}
-	
+
 	public Collection<DVD> hentEideDVDer() {
 		return eideDVDer.values();
 	}
-	
+
 	public Collection<DVD> hentUtlaanteDVDer() {
 		return utlaanteDVDer.values();
 	}
-	
+
 	public Collection<DVD> hentLaanteDVDer() {
 		return laanteDVDer.values();
 	}
-	
+
 	@Override
 	public String toString() {
 		return navn;
